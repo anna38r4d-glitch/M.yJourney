@@ -6,12 +6,16 @@
   <title>Hero's Journey</title>
   <style>
     body { font-family: Arial, sans-serif; text-align: center; background: #f4f4f4; }
-    .container { margin-top: 50px; background: white; padding: 20px; border-radius: 10px; width: 300px; margin-left: auto; margin-right: auto; }
+    .container { margin-top: 20px; background: white; padding: 20px; border-radius: 10px; width: 350px; margin-left: auto; margin-right: auto; }
     input, button, select { margin: 10px; padding: 10px; width: 90%; }
     button { background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    .map { display: flex; justify-content: center; margin-top: 20px; }
+    .level { width: 30px; height: 30px; margin: 5px; border-radius: 50%; background: lightgray; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; }
+    .active { border: 3px solid gold; }
   </style>
 </head>
 <body>
+  <!-- Login -->
   <div class="container" id="loginScreen">
     <h2>Create Account</h2>
     <input type="text" id="username" placeholder="Enter your name"><br>
@@ -21,11 +25,13 @@
     <button onclick="createAccount()">Done</button>
   </div>
 
+  <!-- Game -->
   <div class="container" id="gameScreen" style="display:none;">
     <h2>Welcome, <span id="playerName"></span>!</h2>
     <p>Your skin: <span id="playerSkin"></span></p>
     <p>You are on <b>Level <span id='playerLevel'>1</span></b></p>
-    <button onclick="setGoals()">Set Today’s Goals</button>
+    <div class="map" id="map"></div>
+    <button onclick="finishGoals()">Finish Today’s Goals ✅</button>
   </div>
 
   <script>
@@ -45,7 +51,8 @@
         pass: pass,
         color: color,
         level: 1,
-        coins: 0
+        coins: 0,
+        map: 1
       }));
 
       loadGame();
@@ -59,14 +66,44 @@
         document.getElementById("playerName").innerText = player.name;
         document.getElementById("playerSkin").innerHTML = `<span style="background:${player.color}; padding:5px 15px; border-radius:5px;">&nbsp;</span>`;
         document.getElementById("playerLevel").innerText = player.level;
+        drawMap();
       }
     }
 
-    function setGoals() {
-      alert("Here you’ll be able to add daily goals (coming next 🚀)");
+    function drawMap() {
+      const player = JSON.parse(localStorage.getItem("player"));
+      const mapDiv = document.getElementById("map");
+      mapDiv.innerHTML = "";
+
+      for (let i = 1; i <= 10; i++) {
+        const levelDiv = document.createElement("div");
+        levelDiv.classList.add("level");
+
+        if (i === player.level) {
+          levelDiv.style.background = player.color;
+          levelDiv.classList.add("active");
+        }
+
+        levelDiv.innerText = i;
+        mapDiv.appendChild(levelDiv);
+      }
     }
 
-    // Load game if already logged in
+    function finishGoals() {
+      const player = JSON.parse(localStorage.getItem("player"));
+      if (player.level < 10) {
+        player.level++;
+      } else {
+        player.level = 1;
+        player.map++;
+        player.coins += 50; // reward
+        alert("🎉 You finished the map! +50 coins");
+      }
+      localStorage.setItem("player", JSON.stringify(player));
+      loadGame();
+    }
+
+    // Load if player already exists
     loadGame();
   </script>
 </body>
