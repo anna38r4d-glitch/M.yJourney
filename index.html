@@ -5,137 +5,69 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Hero's Journey</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      background: #f0f8ff;
-      margin: 0;
-      padding: 20px;
-    }
-    h1 {
-      color: #333;
-    }
-    #goal-input {
-      padding: 10px;
-      width: 60%;
-      margin-right: 10px;
-    }
-    button {
-      padding: 10px 15px;
-      border: none;
-      background: #4CAF50;
-      color: white;
-      cursor: pointer;
-      border-radius: 5px;
-    }
-    ul {
-      list-style: none;
-      padding: 0;
-      margin-top: 20px;
-    }
-    li {
-      padding: 10px;
-      background: white;
-      margin: 5px 0;
-      border-radius: 5px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    li.done {
-      text-decoration: line-through;
-      color: gray;
-    }
-    .map {
-      margin-top: 30px;
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-    }
-    .step {
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      background: lightgray;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .step.active {
-      background: gold;
-      font-weight: bold;
-    }
+    body { font-family: Arial, sans-serif; text-align: center; background: #f4f4f4; }
+    .container { margin-top: 50px; background: white; padding: 20px; border-radius: 10px; width: 300px; margin-left: auto; margin-right: auto; }
+    input, button, select { margin: 10px; padding: 10px; width: 90%; }
+    button { background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; }
   </style>
 </head>
 <body>
-  <h1>Hero's Journey</h1>
-  <input id="goal-input" type="text" placeholder="Enter your goal...">
-  <button onclick="addGoal()">Add Goal</button>
-  <ul id="goal-list"></ul>
+  <div class="container" id="loginScreen">
+    <h2>Create Account</h2>
+    <input type="text" id="username" placeholder="Enter your name"><br>
+    <input type="password" id="password" placeholder="Enter passcode"><br>
+    <label for="color">Choose your skin color:</label><br>
+    <input type="color" id="color"><br>
+    <button onclick="createAccount()">Done</button>
+  </div>
 
-  <h2>Your Map</h2>
-  <div class="map" id="map"></div>
+  <div class="container" id="gameScreen" style="display:none;">
+    <h2>Welcome, <span id="playerName"></span>!</h2>
+    <p>Your skin: <span id="playerSkin"></span></p>
+    <p>You are on <b>Level <span id='playerLevel'>1</span></b></p>
+    <button onclick="setGoals()">Set Today’s Goals</button>
+  </div>
 
   <script>
-    let goals = [];
-    let steps = 5; // how many steps on the map
-    let progress = 0;
+    function createAccount() {
+      const name = document.getElementById('username').value;
+      const pass = document.getElementById('password').value;
+      const color = document.getElementById('color').value;
 
-    // draw the map
-    function drawMap() {
-      const map = document.getElementById("map");
-      map.innerHTML = "";
-      for (let i = 0; i < steps; i++) {
-        const step = document.createElement("div");
-        step.classList.add("step");
-        if (i < progress) step.classList.add("active");
-        step.innerText = i + 1;
-        map.appendChild(step);
+      if (!name || !pass) {
+        alert("Please enter name and passcode");
+        return;
+      }
+
+      // Save account in localStorage
+      localStorage.setItem("player", JSON.stringify({
+        name: name,
+        pass: pass,
+        color: color,
+        level: 1,
+        coins: 0
+      }));
+
+      loadGame();
+    }
+
+    function loadGame() {
+      const player = JSON.parse(localStorage.getItem("player"));
+      if (player) {
+        document.getElementById("loginScreen").style.display = "none";
+        document.getElementById("gameScreen").style.display = "block";
+        document.getElementById("playerName").innerText = player.name;
+        document.getElementById("playerSkin").innerHTML = `<span style="background:${player.color}; padding:5px 15px; border-radius:5px;">&nbsp;</span>`;
+        document.getElementById("playerLevel").innerText = player.level;
       }
     }
 
-    // add a new goal
-    function addGoal() {
-      const input = document.getElementById("goal-input");
-      const text = input.value.trim();
-      if (text) {
-        goals.push({ text, done: false });
-        input.value = "";
-        renderGoals();
-      }
+    function setGoals() {
+      alert("Here you’ll be able to add daily goals (coming next 🚀)");
     }
 
-    // toggle goal done
-    function toggleGoal(index) {
-      goals[index].done = !goals[index].done;
-      if (goals[index].done) {
-        progress = Math.min(progress + 1, steps);
-      } else {
-        progress = Math.max(progress - 1, 0);
-      }
-      renderGoals();
-      drawMap();
-    }
-
-    // show goals
-    function renderGoals() {
-      const list = document.getElementById("goal-list");
-      list.innerHTML = "";
-      goals.forEach((goal, index) => {
-        const li = document.createElement("li");
-        li.className = goal.done ? "done" : "";
-        li.innerHTML = `
-          ${goal.text}
-          <button onclick="toggleGoal(${index})">
-            ${goal.done ? "Undo" : "Done"}
-          </button>
-        `;
-        list.appendChild(li);
-      });
-    }
-
-    // init
-    drawMap();
+    // Load game if already logged in
+    loadGame();
   </script>
 </body>
 </html>
