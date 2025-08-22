@@ -1,1 +1,141 @@
-index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hero's Journey</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #f0f8ff;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      color: #333;
+    }
+    #goal-input {
+      padding: 10px;
+      width: 60%;
+      margin-right: 10px;
+    }
+    button {
+      padding: 10px 15px;
+      border: none;
+      background: #4CAF50;
+      color: white;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+      margin-top: 20px;
+    }
+    li {
+      padding: 10px;
+      background: white;
+      margin: 5px 0;
+      border-radius: 5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    li.done {
+      text-decoration: line-through;
+      color: gray;
+    }
+    .map {
+      margin-top: 30px;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+    .step {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: lightgray;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .step.active {
+      background: gold;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>Hero's Journey</h1>
+  <input id="goal-input" type="text" placeholder="Enter your goal...">
+  <button onclick="addGoal()">Add Goal</button>
+  <ul id="goal-list"></ul>
+
+  <h2>Your Map</h2>
+  <div class="map" id="map"></div>
+
+  <script>
+    let goals = [];
+    let steps = 5; // how many steps on the map
+    let progress = 0;
+
+    // draw the map
+    function drawMap() {
+      const map = document.getElementById("map");
+      map.innerHTML = "";
+      for (let i = 0; i < steps; i++) {
+        const step = document.createElement("div");
+        step.classList.add("step");
+        if (i < progress) step.classList.add("active");
+        step.innerText = i + 1;
+        map.appendChild(step);
+      }
+    }
+
+    // add a new goal
+    function addGoal() {
+      const input = document.getElementById("goal-input");
+      const text = input.value.trim();
+      if (text) {
+        goals.push({ text, done: false });
+        input.value = "";
+        renderGoals();
+      }
+    }
+
+    // toggle goal done
+    function toggleGoal(index) {
+      goals[index].done = !goals[index].done;
+      if (goals[index].done) {
+        progress = Math.min(progress + 1, steps);
+      } else {
+        progress = Math.max(progress - 1, 0);
+      }
+      renderGoals();
+      drawMap();
+    }
+
+    // show goals
+    function renderGoals() {
+      const list = document.getElementById("goal-list");
+      list.innerHTML = "";
+      goals.forEach((goal, index) => {
+        const li = document.createElement("li");
+        li.className = goal.done ? "done" : "";
+        li.innerHTML = `
+          ${goal.text}
+          <button onclick="toggleGoal(${index})">
+            ${goal.done ? "Undo" : "Done"}
+          </button>
+        `;
+        list.appendChild(li);
+      });
+    }
+
+    // init
+    drawMap();
+  </script>
+</body>
+</html>
