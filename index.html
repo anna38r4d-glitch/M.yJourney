@@ -1,3 +1,35 @@
+.map-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 60px);
+  grid-gap: 10px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.map-cell {
+  width: 60px;
+  height: 60px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.map-cell:hover {
+  transform: scale(1.1);
+}
+
+.level-complete {
+  background-color: #4caf50 !important;
+}
+
+.next-map {
+  background: linear-gradient(45deg, #ff6f61, #ffcc70, #6a5acd);
+}
 <div class="map-section">
   <h2>Your Adventure Map</h2>
   <div id="map-grid" class="map-grid"></div>
