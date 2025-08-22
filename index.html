@@ -2,109 +2,146 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Hero's Journey</title>
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; background: #f4f4f4; }
-    .container { margin-top: 20px; background: white; padding: 20px; border-radius: 10px; width: 350px; margin-left: auto; margin-right: auto; }
-    input, button, select { margin: 10px; padding: 10px; width: 90%; }
-    button { background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; }
-    .map { display: flex; justify-content: center; margin-top: 20px; }
-    .level { width: 30px; height: 30px; margin: 5px; border-radius: 50%; background: lightgray; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; }
-    .active { border: 3px solid gold; }
+    body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
+    #game { display: none; }
+    .level { display: inline-block; width: 60px; height: 60px; margin: 8px;
+             border: 2px solid black; border-radius: 10px; vertical-align: middle; }
+    .player { width: 40px; height: 40px; border-radius: 50%; margin: auto; margin-top: 8px; }
+    #goalsModal { display: none; position: fixed; top: 50%; left: 50%;
+                  transform: translate(-50%, -50%); background: white; padding: 20px;
+                  border: 2px solid black; border-radius: 10px; }
+    #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+               background: rgba(0,0,0,0.5); }
+    .closeBtn { cursor: pointer; color: red; float: right; font-weight: bold; }
   </style>
 </head>
 <body>
+
   <!-- Login -->
-  <div class="container" id="loginScreen">
-    <h2>Create Account</h2>
-    <input type="text" id="username" placeholder="Enter your name"><br>
-    <input type="password" id="password" placeholder="Enter passcode"><br>
-    <label for="color">Choose your skin color:</label><br>
-    <input type="color" id="color"><br>
-    <button onclick="createAccount()">Done</button>
+  <div id="login">
+    <h1>Hero's Journey</h1>
+    <input type="text" id="username" placeholder="Name"><br><br>
+    <input type="password" id="password" placeholder="Passcode"><br><br>
+    <label>Choose Skin Color:</label>
+    <input type="color" id="skinColor" value="#ff0000"><br><br>
+    <button onclick="startGame()">Done</button>
   </div>
 
   <!-- Game -->
-  <div class="container" id="gameScreen" style="display:none;">
-    <h2>Welcome, <span id="playerName"></span>!</h2>
-    <p>Your skin: <span id="playerSkin"></span></p>
-    <p>You are on <b>Level <span id='playerLevel'>1</span></b></p>
-    <div class="map" id="map"></div>
-    <button onclick="finishGoals()">Finish Today’s Goals ✅</button>
+  <div id="game">
+    <h2>Map <span id="mapNum">1</span> | Coins: <span id="coins">0</span></h2>
+    <div id="map"></div>
   </div>
 
-  <script>
-    function createAccount() {
-      const name = document.getElementById('username').value;
-      const pass = document.getElementById('password').value;
-      const color = document.getElementById('color').value;
+  <!-- Overlay & Goals Modal -->
+  <div id="overlay"></div>
+  <div id="goalsModal">
+    <span class="closeBtn" onclick="closeGoals()">X</span>
+    <h3>Goals for Level <span id="levelNum"></span></h3>
+    <ul id="goalsList"></ul>
+    <input type="text" id="newGoal" placeholder="New goal...">
+    <button onclick="addGoal()">Add</button><br><br>
+    <button onclick="checkCompletion()">Finish Level</button>
+  </div>
 
-      if (!name || !pass) {
-        alert("Please enter name and passcode");
-        return;
+<script>
+  let currentLevel = 1;
+  let currentMap = 1;
+  let coins = 0;
+  let skinColor = "#ff0000";
+  let goals = {};
+
+  function startGame() {
+    skinColor = document.getElementById("skinColor").value;
+    document.getElementById("login").style.display = "none";
+    document.getElementById("game").style.display = "block";
+    renderMap();
+  }
+
+  function renderMap() {
+    const mapDiv = document.getElementById("map");
+    mapDiv.innerHTML = "";
+    for (let i = 1; i <= 10; i++) {
+      const level = document.createElement("div");
+      level.className = "level";
+      level.innerText = i;
+
+      if (i === currentLevel) {
+        const player = document.createElement("div");
+        player.className = "player";
+        player.style.background = skinColor;
+        player.onclick = () => openGoals(i);
+        level.appendChild(player);
       }
-
-      // Save account in localStorage
-      localStorage.setItem("player", JSON.stringify({
-        name: name,
-        pass: pass,
-        color: color,
-        level: 1,
-        coins: 0,
-        map: 1
-      }));
-
-      loadGame();
+      mapDiv.appendChild(level);
     }
+    document.getElementById("mapNum").innerText = currentMap;
+    document.getElementById("coins").innerText = coins;
+  }
 
-    function loadGame() {
-      const player = JSON.parse(localStorage.getItem("player"));
-      if (player) {
-        document.getElementById("loginScreen").style.display = "none";
-        document.getElementById("gameScreen").style.display = "block";
-        document.getElementById("playerName").innerText = player.name;
-        document.getElementById("playerSkin").innerHTML = `<span style="background:${player.color}; padding:5px 15px; border-radius:5px;">&nbsp;</span>`;
-        document.getElementById("playerLevel").innerText = player.level;
-        drawMap();
-      }
+  function openGoals(level) {
+    document.getElementById("overlay").style.display = "block";
+    document.getElementById("goalsModal").style.display = "block";
+    document.getElementById("levelNum").innerText = level;
+    renderGoals(level);
+  }
+
+  function closeGoals() {
+    document.getElementById("overlay").style.display = "none";
+    document.getElementById("goalsModal").style.display = "none";
+  }
+
+  function renderGoals(level) {
+    const goalsList = document.getElementById("goalsList");
+    goalsList.innerHTML = "";
+    if (!goals[level]) goals[level] = [];
+    goals[level].forEach((g, idx) => {
+      const li = document.createElement("li");
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = g.done;
+      cb.onchange = () => { g.done = cb.checked; };
+      li.appendChild(cb);
+      li.append(" " + g.text);
+      goalsList.appendChild(li);
+    });
+  }
+
+  function addGoal() {
+    const level = currentLevel;
+    const newGoalText = document.getElementById("newGoal").value;
+    if (newGoalText.trim() !== "") {
+      goals[level].push({ text: newGoalText, done: false });
+      document.getElementById("newGoal").value = "";
+      renderGoals(level);
     }
+  }
 
-    function drawMap() {
-      const player = JSON.parse(localStorage.getItem("player"));
-      const mapDiv = document.getElementById("map");
-      mapDiv.innerHTML = "";
-
-      for (let i = 1; i <= 10; i++) {
-        const levelDiv = document.createElement("div");
-        levelDiv.classList.add("level");
-
-        if (i === player.level) {
-          levelDiv.style.background = player.color;
-          levelDiv.classList.add("active");
-        }
-
-        levelDiv.innerText = i;
-        mapDiv.appendChild(levelDiv);
-      }
+  function checkCompletion() {
+    const levelGoals = goals[currentLevel] || [];
+    if (levelGoals.length === 0) {
+      alert("Add at least one goal!");
+      return;
     }
-
-    function finishGoals() {
-      const player = JSON.parse(localStorage.getItem("player"));
-      if (player.level < 10) {
-        player.level++;
+    if (levelGoals.every(g => g.done)) {
+      closeGoals();
+      if (currentLevel < 10) {
+        currentLevel++;
       } else {
-        player.level = 1;
-        player.map++;
-        player.coins += 50; // reward
-        alert("🎉 You finished the map! +50 coins");
+        coins += 50;
+        currentMap++;
+        currentLevel = 1;
+        goals = {};
+        alert("🎉 You finished the map! Earned 50 coins!");
       }
-      localStorage.setItem("player", JSON.stringify(player));
-      loadGame();
+      renderMap();
+    } else {
+      alert("Finish all goals first!");
     }
-
-    // Load if player already exists
-    loadGame();
-  </script>
+  }
+</script>
 </body>
 </html>
+
